@@ -1,5 +1,6 @@
 using System.CodeDom;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 using Stately;
 
@@ -9,10 +10,12 @@ public class Solver
     public void Solve()
     {
         var Root = Maze.Root;
-        RecursiveDFS(Root);
+        // RecursiveDFS(Root);
+        // DFS(Root);
+        // BFS(Root);
     }
 
-    public bool RecursiveDFS(Space space) // Done
+    public bool RecursiveDFS(Space space)
     {
         var child = space.GetChildrenStack();
 
@@ -31,34 +34,9 @@ public class Solver
             space.IsSolution = RecursiveDFS(crr);
             if (space.IsSolution)
                 return true;
-
         }
         return false;
     }
-    public bool RecursiveBFS(Space space) // Fix
-    {
-        var child = space.GetChildrenQueue();
-
-        while (child.Count > 0)
-        {
-            var crr = child.Dequeue();
-            crr.Visited = true;
-
-            if (crr.Exit)
-            {
-                crr.IsSolution = true;
-                space.IsSolution = true;
-                return true;
-            }
-
-            space.IsSolution = RecursiveBFS(crr);
-            if (space.IsSolution)
-                return true;
-
-        }
-        return false;
-    }
-
     public void DFS(Space root) // Fix to show the best path
     {
         var stack = new Stack<Space>();
@@ -89,7 +67,7 @@ public class Solver
                 stack.Push(crr.Bottom);
         }
     }
-    public void BFS(Space root)  // Fix to show the best path
+    public void BFS(Space root) // Fix to show the best path
     {
         var queue = new Queue<Space>();
         queue.Enqueue(root);
@@ -141,22 +119,39 @@ public static class SolverExtensions
 
         return stack;
     }
-    public static Queue<Space> GetChildrenQueue(this Space space)
+    public static Stack<Space> Murilove(this Space root)
     {
-        var queue = new Queue<Space>();
 
-        if (space.Left is not null && !space.Left.Visited)
-            queue.Enqueue(space.Left);
+        Stack<Space> children = new();
+        children.Push(root);
 
-        if (space.Right is not null && !space.Right.Visited)
-            queue.Enqueue(space.Right);
+        while (children.Count > 0)
+        {
+            var current = children.Peek();
+            current.Visited = true;
 
-        if (space.Top is not null && !space.Top.Visited)
-            queue.Enqueue(space.Top);
+            if (current.Exit)
+                break;
 
-        if (space.Bottom is not null && !space.Bottom.Visited)
-            queue.Enqueue(space.Bottom);
+            if (current.Right is not null && !current.Right.Visited)
+                children.Push(current.Right);
+            
+             if (current.Bottom is not null && !current.Bottom.Visited)
+                children.Push(current.Bottom);
+            
+             if (current.Top is not null && !current.Top.Visited)
+                children.Push(current.Top);
+            
+             if (current.Left is not null && !current.Left.Visited)
+                children.Push(current.Left);
 
-        return queue;
+            if (current == children.Peek())
+                children.Pop();
+        }
+
+        foreach (var son in children)
+            son.IsSolution = true;
+        
+        return children;
     }
 }
